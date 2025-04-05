@@ -2,6 +2,7 @@ package com.example.individualassignment_82
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun ShowCalendar(){
+fun ShowCalendar(selectedDate: LocalDate, changeDate: (LocalDate)->Unit, modifier: Modifier){
     val today = LocalDate.now()
     var displayedYear by rememberSaveable { mutableStateOf(today.year) }
     var displayedMonth by rememberSaveable { mutableStateOf(today.month) }
@@ -42,7 +43,8 @@ fun ShowCalendar(){
     val fontSize = 16.sp
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
     ){
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -107,7 +109,6 @@ fun ShowCalendar(){
             items(blanks){
                 Box(
                     modifier = Modifier
-                        .border(width = 3.dp, color = Color.Black)
                         .aspectRatio(1f)
                 ){
                     Text(
@@ -119,15 +120,26 @@ fun ShowCalendar(){
             }
             items(daysInDisplayedMonth) { i ->
                 val dayNum = i + 1
-                val boxColor = if (dayNum == today.dayOfMonth
-                    && displayedMonth == today.month
+
+                var boxColor = Color.White
+                if(displayedMonth == today.month
                     && displayedYear == today.year
-                ) Color.Yellow else Color.White
+                    && dayNum == today.dayOfMonth){
+                        boxColor = Color.Yellow
+                } else if(dayNum == selectedDate.dayOfMonth
+                    && displayedMonth == selectedDate.month
+                    && displayedYear == selectedDate.year){
+                        boxColor = Color.LightGray
+                }
+
                 Box(
                     modifier = Modifier
                         .border(width = 3.dp, color = Color.Black)
                         .aspectRatio(1f)
                         .background(color = boxColor)
+                        .clickable {
+                            changeDate(LocalDate.of(displayedYear, displayedMonth, dayNum))
+                        }
                 ){
                     Text(
                         text = dayNum.toString(),

@@ -81,8 +81,38 @@ fun MainScreen(padding: PaddingValues){
     val isDarkMode by darkModeFlow.collectAsState(initial = false)
     val fontSize by fontSizeFlow.collectAsState(initial = 12)
 
+    val windowInfo = calculateCurrentWindowInfo()
+    var today by rememberSaveable {mutableStateOf(LocalDate.now())}
+
+    if(windowInfo.orientation == Orientation.PORTRAIT){
+        Column(
+            modifier = Modifier.padding(padding)
+        ) {
+            ShowCalendar(
+                today,
+                {newDate->
+                    today = newDate
+                },
+                modifier = Modifier.weight(1f))
+            JournalScreen(today, modifier = Modifier.weight(1f))
+        }
+    } else {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.padding(padding)
+        ){
+            ShowCalendar(
+                today,
+                {newDate->
+                    today = newDate
+                },
+                modifier = Modifier.weight(.5f))
+            JournalScreen(today, modifier = Modifier.weight(.6f))
+        }
+    }
+
     // Apply the theme based on the preference
-    DataStoreDemoApp(isDarkMode = isDarkMode)
+    //DataStoreDemoApp(isDarkMode = isDarkMode)
 }
 
 @Composable
