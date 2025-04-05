@@ -70,6 +70,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(padding: PaddingValues){
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
     val FONT_SIZE_KEY = intPreferencesKey("font_size")
 
@@ -81,38 +82,128 @@ fun MainScreen(padding: PaddingValues){
     val isDarkMode by darkModeFlow.collectAsState(initial = false)
     val fontSize by fontSizeFlow.collectAsState(initial = 12)
 
+    val colorScheme = if (isDarkMode) darkColorScheme() else lightColorScheme()
+
     val windowInfo = calculateCurrentWindowInfo()
     var today by rememberSaveable {mutableStateOf(LocalDate.now())}
 
-    if(windowInfo.orientation == Orientation.PORTRAIT){
-        Column(
-            modifier = Modifier.padding(padding)
+    MaterialTheme(colorScheme = colorScheme) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
         ) {
-            ShowCalendar(
-                today,
-                {newDate->
-                    today = newDate
-                },
-                modifier = Modifier.weight(1f))
-            JournalScreen(today, modifier = Modifier.weight(1f))
-        }
-    } else {
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.padding(padding)
-        ){
-            ShowCalendar(
-                today,
-                {newDate->
-                    today = newDate
-                },
-                modifier = Modifier.weight(.5f))
-            JournalScreen(today, modifier = Modifier.weight(.6f))
+            if (windowInfo.orientation == Orientation.PORTRAIT) {
+                Column(
+                    modifier = Modifier.padding(padding)
+                ) {
+                    ShowCalendar(
+                        today,
+                        { newDate ->
+                            today = newDate
+                        },
+                        modifier = Modifier.weight(1f),
+                        colorScheme
+                    )
+                    JournalScreen(today, fontSize, modifier = Modifier.weight(1f))
+                    Row() {
+                        Column() {
+                            Text(
+                                text = if (isDarkMode) "Dark Mode" else "Light Mode",
+                                color = colorScheme.onBackground
+                            )
+                            Switch(
+                                modifier = Modifier.padding(4.dp),
+                                checked = isDarkMode,
+                                onCheckedChange = { newValue ->
+                                    scope.launch {
+                                        context.dataStore.edit { preferences ->
+                                            preferences[DARK_MODE_KEY] = newValue
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        Spacer(modifier = Modifier.size(12.dp))
+                        Column() {
+                            Text(
+                                text = "Font Size: $fontSize",
+                                color = colorScheme.onBackground
+                            )
+                            Slider(
+                                value = fontSize.toFloat(),
+                                valueRange = 12f..24f,
+                                steps = 12,
+                                onValueChange = { newValue: Float ->
+                                    scope.launch {
+                                        context.dataStore.edit { preferences ->
+                                            preferences[FONT_SIZE_KEY] = newValue.toInt()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.padding(padding)
+                ) {
+                    ShowCalendar(
+                        today,
+                        { newDate ->
+                            today = newDate
+                        },
+                        modifier = Modifier.weight(.5f),
+                        colorScheme
+                    )
+                    Column(
+                        modifier = Modifier.weight(.6f)
+                    ) {
+                        JournalScreen(today, fontSize, modifier = Modifier.weight(1f))
+                        Row() {
+                            Column() {
+                                Text(
+                                    text = if (isDarkMode) "Dark Mode" else "Light Mode",
+                                    color = colorScheme.onBackground
+                                )
+                                Switch(
+                                    modifier = Modifier.padding(4.dp),
+                                    checked = isDarkMode,
+                                    onCheckedChange = { newValue ->
+                                        scope.launch {
+                                            context.dataStore.edit { preferences ->
+                                                preferences[DARK_MODE_KEY] = newValue
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                            Spacer(modifier = Modifier.size(12.dp))
+                            Column() {
+                                Text(
+                                    text = "Font Size: $fontSize",
+                                    color = colorScheme.onBackground
+                                )
+                                Slider(
+                                    value = fontSize.toFloat(),
+                                    valueRange = 12f..24f,
+                                    steps = 12,
+                                    onValueChange = { newValue: Float ->
+                                        scope.launch {
+                                            context.dataStore.edit { preferences ->
+                                                preferences[FONT_SIZE_KEY] = newValue.toInt()
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
-
-    // Apply the theme based on the preference
-    //DataStoreDemoApp(isDarkMode = isDarkMode)
 }
 
 @Composable

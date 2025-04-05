@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.rounded.KeyboardArrowRight
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -33,7 +34,12 @@ import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun ShowCalendar(selectedDate: LocalDate, changeDate: (LocalDate)->Unit, modifier: Modifier){
+fun ShowCalendar(
+    selectedDate: LocalDate,
+    changeDate: (LocalDate)->Unit,
+    modifier: Modifier,
+    colorScheme: ColorScheme
+){
     val today = LocalDate.now()
     var displayedYear by rememberSaveable { mutableStateOf(today.year) }
     var displayedMonth by rememberSaveable { mutableStateOf(today.month) }
@@ -121,20 +127,23 @@ fun ShowCalendar(selectedDate: LocalDate, changeDate: (LocalDate)->Unit, modifie
             items(daysInDisplayedMonth) { i ->
                 val dayNum = i + 1
 
-                var boxColor = Color.White
+                var boxColor = colorScheme.background
+                var textColor = colorScheme.onBackground
                 if(displayedMonth == today.month
                     && displayedYear == today.year
                     && dayNum == today.dayOfMonth){
                         boxColor = Color.Yellow
+                        textColor = Color.Black
                 } else if(dayNum == selectedDate.dayOfMonth
                     && displayedMonth == selectedDate.month
                     && displayedYear == selectedDate.year){
                         boxColor = Color.LightGray
+                        textColor = Color.Black
                 }
 
                 Box(
                     modifier = Modifier
-                        .border(width = 3.dp, color = Color.Black)
+                        .border(width = 3.dp, color = colorScheme.onBackground)
                         .aspectRatio(1f)
                         .background(color = boxColor)
                         .clickable {
@@ -144,7 +153,8 @@ fun ShowCalendar(selectedDate: LocalDate, changeDate: (LocalDate)->Unit, modifie
                     Text(
                         text = dayNum.toString(),
                         fontSize = fontSize,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
+                        color = textColor
                     )
                 }
             }

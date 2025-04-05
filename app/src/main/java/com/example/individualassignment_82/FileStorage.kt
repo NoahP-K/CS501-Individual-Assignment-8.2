@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -15,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,13 +25,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.io.FileNotFoundException
 import java.time.LocalDate
 
 @Composable
-fun JournalScreen(date: LocalDate, modifier: Modifier) {
+fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
     val context = LocalContext.current
     val fileName = "${date.month}_${date.dayOfMonth}_${date.year}"
 
@@ -38,61 +41,68 @@ fun JournalScreen(date: LocalDate, modifier: Modifier) {
     var fileContent by rememberSaveable { mutableStateOf("") }
     var message by rememberSaveable { mutableStateOf("") }
 
-    if(currentDay != date){
-        textToSave = readFromFile(context, fileName)
-        currentDay = date
+    LaunchedEffect(date) {
+        if (currentDay != date) {
+            textToSave = readFromFile(context, fileName)
+            currentDay = date
+        }
     }
 
-    val scrollState = rememberLazyListState()
-    Column(
+    LazyColumn(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .scrollable(
-                scrollState,
-                orientation = Orientation.Vertical,
-                enabled = true,
-            )
             .then(modifier),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "${date.month} ${date.dayOfMonth}, ${date.year}",
-            fontSize = 30.sp,
+        item {
+            Text(
+                text = "${date.month} ${date.dayOfMonth}, ${date.year}",
+                fontSize = 30.sp,
 
-        )
-
-        OutlinedTextField(
-            value = textToSave,
-            onValueChange = { textToSave = it },
-            label = { Text("Enter text to save") },
-            modifier = Modifier.fillMaxWidth()
-        )
+                )
+        }
+        item {
+            OutlinedTextField(
+                value = textToSave,
+                textStyle = TextStyle(fontSize = fontSize.sp),
+                onValueChange = { textToSave = it },
+                label = { Text("Enter text to save") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         // Save button
-        Button(onClick = {
-            saveToFile(context, fileName, textToSave)
-            message = "Text saved successfully"
-        }) {
-            Text("Save to Internal Storage")
+        item {
+            Button(onClick = {
+                saveToFile(context, fileName, textToSave)
+                message = "Text saved successfully"
+            }) {
+                Text("Save to Internal Storage")
+            }
         }
 
         // Read button
-        Button(onClick = {
-            fileContent = readFromFile(context, fileName)
-            textToSave = fileContent
-        }) {
-            Text("Load Saved Version")
+        item {
+            Button(onClick = {
+                fileContent = readFromFile(context, fileName)
+                textToSave = fileContent
+            }) {
+                Text("Load Saved Version")
+            }
         }
 
         // Delete button
-        Button(onClick = {
-            val deleted = deleteFile(context, fileName)
-            textToSave = readFromFile(context, fileName)
-            message = if (deleted) "File deleted" else "File not found"
-        }) {
-            Text("Delete File")
+        item {
+            Button(onClick = {
+                val deleted = deleteFile(context, fileName)
+                textToSave = readFromFile(context, fileName)
+                fileContent = readFromFile(context, fileName)
+                message = if (deleted) "File deleted" else "File not found"
+            }) {
+                Text("Delete File")
+            }
         }
     }
 }
