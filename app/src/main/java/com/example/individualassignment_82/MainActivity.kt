@@ -40,26 +40,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // Read the preferences as Compose state
-//            val context = this
-//            val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
-//            val FONT_SIZE_KEY = intPreferencesKey("font_size")
-//
-//            val darkModeFlow: Flow<Boolean> = context.dataStore.data
-//                .map { preferences -> preferences[DARK_MODE_KEY] ?: false }
-//            val fontSizeFlow: Flow<Int> = context.dataStore.data
-//                .map { preferences -> preferences[FONT_SIZE_KEY] ?: 12}
-//
-//            val isDarkMode by darkModeFlow.collectAsState(initial = false)
-//            val fontSize by fontSizeFlow.collectAsState(initial = 12)
-//
-//            // Apply the theme based on the preference
-//            DataStoreDemoApp(isDarkMode = isDarkMode)
-//            Scaffold() {padding->
-//                Column(Modifier.padding(padding)){
-//                ShowCalendar()
-//                    }
-//            }
             Scaffold() { padding ->
                 MainScreen(padding)
             }
@@ -67,13 +47,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+//main app screen
 @Composable
 fun MainScreen(padding: PaddingValues){
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
-    val FONT_SIZE_KEY = intPreferencesKey("font_size")
+    val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")  //key to dark mode preference
+    val FONT_SIZE_KEY = intPreferencesKey("font_size")  //key to font size preference
 
+    //read the preferences as a flow from dataStore
     val darkModeFlow: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[DARK_MODE_KEY] ?: false }
     val fontSizeFlow: Flow<Int> = context.dataStore.data
@@ -85,13 +67,17 @@ fun MainScreen(padding: PaddingValues){
     val colorScheme = if (isDarkMode) darkColorScheme() else lightColorScheme()
 
     val windowInfo = calculateCurrentWindowInfo()
+    //read the current day
     var today by rememberSaveable {mutableStateOf(LocalDate.now())}
 
+    //the color scheme should depend on the chosen preference
     MaterialTheme(colorScheme = colorScheme) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
+            //display a column of calendar and page in portrait mode.
+            //display a row of the two in landscape mode.
             if (windowInfo.orientation == Orientation.PORTRAIT) {
                 Column(
                     modifier = Modifier.padding(padding)
@@ -105,6 +91,7 @@ fun MainScreen(padding: PaddingValues){
                         colorScheme
                     )
                     JournalScreen(today, fontSize, modifier = Modifier.weight(1f))
+                    //make sure to provide preference options
                     Row() {
                         Column() {
                             Text(
@@ -161,6 +148,7 @@ fun MainScreen(padding: PaddingValues){
                         modifier = Modifier.weight(.6f)
                     ) {
                         JournalScreen(today, fontSize, modifier = Modifier.weight(1f))
+                        //make sure to show preference options
                         Row() {
                             Column() {
                                 Text(
@@ -203,59 +191,5 @@ fun MainScreen(padding: PaddingValues){
                 }
             }
         }
-    }
-}
-
-@Composable
-fun DataStoreDemoApp(isDarkMode: Boolean) {
-    // Dynamically apply dark/light theme using Material3
-    val colorScheme = if (isDarkMode) darkColorScheme() else lightColorScheme()
-
-    MaterialTheme(colorScheme = colorScheme) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            SettingsScreen()
-        }
-    }
-}
-
-@Composable
-fun SettingsScreen() {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
-
-    val darkModeFlow: Flow<Boolean> = context.dataStore.data
-        .map { preferences -> preferences[DARK_MODE_KEY] ?: false }
-
-    val isDarkMode by darkModeFlow.collectAsState(initial = false)
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Dark Mode Preference", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Switch(
-            checked = isDarkMode,
-            onCheckedChange = { newValue ->
-                scope.launch {
-                    context.dataStore.edit { preferences ->
-                        preferences[DARK_MODE_KEY] = newValue
-                    }
-                }
-            }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = if (isDarkMode) "Dark Mode ON" else "Dark Mode OFF")
     }
 }

@@ -33,6 +33,11 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 
+/*
+Couldn't find a good enough api or existing composable to make a calendar, so in a fit
+of equal parts inspiration and sleep deprivation I decided to just make my own.
+ */
+
 @Composable
 fun ShowCalendar(
     selectedDate: LocalDate,
@@ -40,11 +45,11 @@ fun ShowCalendar(
     modifier: Modifier,
     colorScheme: ColorScheme
 ){
-    val today = LocalDate.now()
-    var displayedYear by rememberSaveable { mutableStateOf(today.year) }
-    var displayedMonth by rememberSaveable { mutableStateOf(today.month) }
-    val daysInDisplayedMonth = YearMonth.of(displayedYear, displayedMonth).lengthOfMonth()
-    val firstDayOfDisplayedMonth = YearMonth.of(displayedYear, displayedMonth).atDay(1)
+    val today = LocalDate.now() //current date; NOT the same as the current displayed month/year
+    var displayedYear by rememberSaveable { mutableStateOf(today.year) }    //year displayed
+    var displayedMonth by rememberSaveable { mutableStateOf(today.month) }  //month displayed
+    val daysInDisplayedMonth = YearMonth.of(displayedYear, displayedMonth).lengthOfMonth() //# days in displayed month
+    val firstDayOfDisplayedMonth = YearMonth.of(displayedYear, displayedMonth).atDay(1) //first day of displayed month
 
     val fontSize = 16.sp
 
@@ -52,6 +57,7 @@ fun ShowCalendar(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ){
+        //display month and year and provide arrow buttons to increment/decrement each
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -85,7 +91,10 @@ fun ShowCalendar(
             ) { Icon(imageVector = Icons.Rounded.KeyboardArrowRight,
                 contentDescription = "next month") }
         }
+        //days of week listed for use in a few places
         val days = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
+        //blanks indicates how many days of the week occur before the first day of the month.
+        //these days should be blank on the calendar
         val blanks = when(firstDayOfDisplayedMonth.dayOfWeek){
             DayOfWeek.SUNDAY->0
             DayOfWeek.MONDAY->1
@@ -95,6 +104,8 @@ fun ShowCalendar(
             DayOfWeek.FRIDAY->5
             else->6
         }
+        //use lazyverticalgrid to create boxes for each day.
+        //Set width to strictly 7 so that the format is always preserved
         LazyVerticalGrid(
             columns = GridCells.Fixed(7),
             modifier = Modifier
@@ -105,6 +116,7 @@ fun ShowCalendar(
             verticalArrangement = Arrangement.SpaceEvenly,
             userScrollEnabled = true
         ) {
+            //first make a bar of day names
             items(days.size){i->
                 Text(
                     text = days[i],
@@ -112,6 +124,7 @@ fun ShowCalendar(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
+            //then make the 'blank' days before the first day of the month
             items(blanks){
                 Box(
                     modifier = Modifier
@@ -124,9 +137,12 @@ fun ShowCalendar(
                     )
                 }
             }
+            //finally make all days in the month
             items(daysInDisplayedMonth) { i ->
                 val dayNum = i + 1
-
+                //The current day should be highlighted yellow for easy identification.
+                //The current selected day should be light gray for easy identification.
+                //All other day boxes should be black/white depending on light mode.
                 var boxColor = colorScheme.background
                 var textColor = colorScheme.onBackground
                 if(displayedMonth == today.month

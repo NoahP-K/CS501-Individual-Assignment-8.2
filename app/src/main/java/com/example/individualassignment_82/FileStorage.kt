@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.sp
 import java.io.FileNotFoundException
 import java.time.LocalDate
 
+//A lot of this is borrowed from example code.
+
+//shows the journal page of a given date and allows editing, saving, and loading
 @Composable
 fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
     val context = LocalContext.current
@@ -38,9 +41,11 @@ fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
 
     var currentDay by rememberSaveable { mutableStateOf(date)}
     var textToSave by rememberSaveable { mutableStateOf(readFromFile(context, fileName)) }
-    var fileContent by rememberSaveable { mutableStateOf("") }
+    //var fileContent by rememberSaveable { mutableStateOf("") }
     var message by rememberSaveable { mutableStateOf("") }
 
+    //only read from the saved file if the given date is not the same as the one being
+    // displayed currently
     LaunchedEffect(date) {
         if (currentDay != date) {
             textToSave = readFromFile(context, fileName)
@@ -56,6 +61,7 @@ fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        //display current date
         item {
             Text(
                 text = "${date.month} ${date.dayOfMonth}, ${date.year}",
@@ -63,6 +69,7 @@ fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
 
                 )
         }
+        //text to read/write
         item {
             OutlinedTextField(
                 value = textToSave,
@@ -86,8 +93,9 @@ fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
         // Read button
         item {
             Button(onClick = {
-                fileContent = readFromFile(context, fileName)
-                textToSave = fileContent
+                //fileContent = readFromFile(context, fileName)
+                //textToSave = fileContent
+                textToSave = readFromFile(context, fileName)
             }) {
                 Text("Load Saved Version")
             }
@@ -98,7 +106,7 @@ fun JournalScreen(date: LocalDate, fontSize: Int, modifier: Modifier) {
             Button(onClick = {
                 val deleted = deleteFile(context, fileName)
                 textToSave = readFromFile(context, fileName)
-                fileContent = readFromFile(context, fileName)
+                //fileContent = readFromFile(context, fileName)
                 message = if (deleted) "File deleted" else "File not found"
             }) {
                 Text("Delete File")
